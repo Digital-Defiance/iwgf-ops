@@ -68,7 +68,12 @@ function OpsShell() {
     <div className="shell">
       <header className="top">
         <div className="brand">
-          <img src="/W-1-1.png" alt="" width={36} height={36} />
+          <img
+            src="/iwgf-1-1-ops-tx.svg"
+            alt=""
+            width={40}
+            height={40}
+          />
           <div>
             <h1>IWGF Ops</h1>
             <p>Federation administration · warp-12</p>

@@ -11,6 +11,7 @@
     "test": "vitest run",
     "tauri:dev": "tauri dev",
     "tauri:build": "tauri build",
+    "tauri:icon": "tauri icon public/iwgf-1-1-ops.png",
     "deploy:hosting": "yarn build && bash ../Warp12/scripts/sync-federation-hosting.sh ops && bash ../Warp12/scripts/firebase-with-env.sh deploy --only hosting:ops"
   },
   "dependencies": {
