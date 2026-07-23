@@ -935,7 +935,7 @@ export function CaptainsPanel() {
 
           <h3 style={{ fontSize: '1rem' }}>TEI ratings</h3>
           {ratingRows.length === 0 ? (
-            <p style={{ color: 'var(--muted)' }}>No OpenSkill tracks on file.</p>
+            <p style={{ color: 'var(--muted)' }}>No TEI tracks on file.</p>
           ) : (
             <div className="table-wrap">
               <table>
