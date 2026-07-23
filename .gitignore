@@ -8,3 +8,7 @@ src-tauri/tauri.conf.local.json
 .DS_Store
 *.log
 .vite/
+
+.yarn/install-state.gz
+.yarn/cache
+
