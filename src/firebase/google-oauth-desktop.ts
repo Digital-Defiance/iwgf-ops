@@ -5,8 +5,7 @@
  * Same loopback flow as The Bridge: system browser → `http://127.0.0.1:<port>`
  * → Rust one-shot server → `signInWithCredential`.
  *
- * Requires `VITE_GOOGLE_DESKTOP_CLIENT_ID` (+ secret) from ops `.env`
- * (Vite `envDir` for WarpOps points there).
+ * Requires `VITE_GOOGLE_DESKTOP_CLIENT_ID` (+ secret) from ops `.env`.
  */
 
 export interface GoogleNativeTokens {
