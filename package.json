@@ -1,0 +1,33 @@
+{
+  "name": "@iwgf/ops",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "packageManager": "yarn@4.17.0",
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "preview": "vite preview --port 4320 --host localhost",
+    "test": "vitest run",
+    "tauri:dev": "tauri dev",
+    "tauri:build": "tauri build",
+    "deploy:hosting": "yarn build && bash ../Warp12/scripts/sync-federation-hosting.sh ops && bash ../Warp12/scripts/firebase-with-env.sh deploy --only hosting:ops"
+  },
+  "dependencies": {
+    "@tauri-apps/api": "^2",
+    "@tauri-apps/plugin-opener": "^2",
+    "firebase": "^12.15.0",
+    "react": "^19.0.0",
+    "react-dom": "^19.0.0"
+  },
+  "devDependencies": {
+    "@tauri-apps/cli": "^2",
+    "@types/node": "^22.0.0",
+    "@types/react": "^19.0.0",
+    "@types/react-dom": "^19.0.0",
+    "@vitejs/plugin-react": "^6.0.0",
+    "typescript": "~5.9.2",
+    "vite": "^8.0.0",
+    "vitest": "~4.1.0"
+  }
+}
