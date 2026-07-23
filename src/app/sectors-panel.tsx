@@ -18,6 +18,7 @@ import {
 } from '../firebase/moderation-service';
 import { opsUnrateOnlineSector } from '../firebase/tei-service';
 import { useOpsAuth } from '../firebase/ops-auth';
+import { useOpsProduct } from './product-context';
 
 type CoachPresenceRow = {
   playerId: string;
@@ -52,10 +53,16 @@ function SectorTable({
   games,
   busy,
   onOpen,
+  matchLabel,
+  matchIdLabel,
+  seatsLabel,
 }: {
   games: OpsGameSummary[];
   busy: boolean;
   onOpen: (id: string) => void;
+  matchLabel: string;
+  matchIdLabel: string;
+  seatsLabel: string;
 }) {
   return (
     <div className="table-wrap">
@@ -63,8 +70,8 @@ function SectorTable({
         <thead>
           <tr>
             <th scope="col">Phase</th>
-            <th scope="col">Sector id</th>
-            <th scope="col">Fleet</th>
+            <th scope="col">{matchIdLabel}</th>
+            <th scope="col">{seatsLabel}</th>
             <th scope="col">Host</th>
             <th scope="col">Updated</th>
             <th scope="col">Created</th>
@@ -74,7 +81,7 @@ function SectorTable({
         <tbody>
           {games.length === 0 ? (
             <tr>
-              <td colSpan={7}>No sectors.</td>
+              <td colSpan={7}>No {matchLabel.toLowerCase()}s.</td>
             </tr>
           ) : (
             games.map((g) => (
@@ -131,6 +138,7 @@ function SectorTable({
 
 export function SectorsPanel() {
   const { isAdmin } = useOpsAuth();
+  const { product, labels } = useOpsProduct();
   const [active, setActive] = useState<OpsGameSummary[]>([]);
   const [results, setResults] = useState<OpsGameSummary[]>([]);
   const [openGame, setOpenGame] = useState<OpsGameSummary | null>(null);
@@ -166,10 +174,10 @@ export function SectorsPanel() {
     setBusy(true);
     setError(null);
     try {
-      const res = await listActiveGames(100);
+      const res = await listActiveGames(product, 100);
       setActive(res.games);
       setStatus(
-        `Active: ${res.games.length} sector(s)` +
+        `Active: ${res.games.length} ${labels.match.toLowerCase()}(s)` +
           (res.scanned != null ? ` (scanned ${res.scanned} recent)` : '')
       );
     } catch (err) {
@@ -177,7 +185,7 @@ export function SectorsPanel() {
     } finally {
       setBusy(false);
     }
-  }, []);
+  }, [product, labels.match]);
 
   useEffect(() => {
     void refreshActive();
@@ -188,7 +196,7 @@ export function SectorsPanel() {
     setError(null);
     setStatus(null);
     try {
-      const res = await searchGames({
+      const res = await searchGames(product, {
         gameId: gameId.trim() || undefined,
         hostId: hostId.trim() || undefined,
         phase: phase.trim() || undefined,
@@ -210,7 +218,7 @@ export function SectorsPanel() {
     setBusy(true);
     setError(null);
     try {
-      const res = await getOpsGame(id);
+      const res = await getOpsGame(product, id);
       setOpenGame(res.game);
       setDetailJson(JSON.stringify({ game: res.game, detail: res.detail }, null, 2));
       const presenceRaw = res.detail.coachPresence;
@@ -252,6 +260,10 @@ export function SectorsPanel() {
     if (!openGame) {
       return;
     }
+    if (product === 'lattice') {
+      setError('Hand inspection is Warp Dominoes only.');
+      return;
+    }
     setBusy(true);
     setError(null);
     try {
@@ -277,7 +289,7 @@ export function SectorsPanel() {
     setBusy(true);
     setError(null);
     try {
-      const res = await opsKickCaptain({
+      const res = await opsKickCaptain(product, {
         gameId: openGame.id,
         targetUid: kickUid.trim(),
         reason: kickReason.trim() || undefined,
@@ -314,6 +326,7 @@ export function SectorsPanel() {
     setError(null);
     try {
       const res = await opsUnrateOnlineSector(
+        product,
         openGame.id,
         unrateReason.trim()
       );
@@ -344,7 +357,7 @@ export function SectorsPanel() {
     setBusy(true);
     setError(null);
     try {
-      await opsTerminateSector({
+      await opsTerminateSector(product, {
         gameId: openGame.id,
         reason: termReason.trim() || undefined,
         mode,
@@ -371,7 +384,7 @@ export function SectorsPanel() {
     setBusy(true);
     setError(null);
     try {
-      const res = await listStaleGames({ olderThanDays: 7, limit: 50 });
+      const res = await listStaleGames(product, { olderThanDays: 7, limit: 50 });
       setStale(res.games);
       setStatus(`Stale candidates: ${res.games.length} (cutoff ${res.cutoff}).`);
     } catch (err) {
@@ -388,7 +401,7 @@ export function SectorsPanel() {
     setBusy(true);
     setError(null);
     try {
-      await opsCleanupStaleSector(id);
+      await opsCleanupStaleSector(product, id);
       setStale((prev) => prev.filter((g) => g.id !== id));
       setStatus(`Cleaned up ${id}.`);
     } catch (err) {
@@ -408,7 +421,7 @@ export function SectorsPanel() {
     setBusy(true);
     setError(null);
     try {
-      const res = await opsDropSpectators(openGame.id);
+      const res = await opsDropSpectators(product, openGame.id);
       setStatus(`Dropped ${res.dropped} spectator(s).`);
       await onOpen(openGame.id);
     } catch (err) {
@@ -424,7 +437,7 @@ export function SectorsPanel() {
     setBusy(true);
     setError(null);
     try {
-      await setAllowSpectate(openGame.id, allow);
+      await setAllowSpectate(product, openGame.id, allow);
       setStatus(
         allow
           ? `Forced allow spectate on ${openGame.id}.`
@@ -464,18 +477,25 @@ export function SectorsPanel() {
         <p style={{ color: 'var(--muted)', marginTop: '0.5rem' }}>
           Lobby, active, and round-end sectors (most recently updated).
         </p>
-        <SectorTable games={active} busy={busy} onOpen={(id) => void onOpen(id)} />
+        <SectorTable
+          games={active}
+          busy={busy}
+          onOpen={(id) => void onOpen(id)}
+          matchLabel={labels.match}
+          matchIdLabel={labels.matchId}
+          seatsLabel={labels.seats}
+        />
       </section>
 
       <section className="panel" aria-labelledby="search-sectors-title">
         <h2 id="search-sectors-title">Historical search</h2>
         <p style={{ color: 'var(--muted)', marginTop: 0 }}>
-          Find sectors by id, host, phase, rated flag, or created date (complaint
-          windows).
+          Find {labels.matches.toLowerCase()} by id, host, phase, rated flag, or
+          created date (complaint windows).
         </p>
         <div className="grid two">
           <label>
-            Sector id
+            {labels.matchId}
             <input
               value={gameId}
               onChange={(e) => setGameId(e.target.value)}
@@ -547,6 +567,9 @@ export function SectorsPanel() {
           games={results}
           busy={busy}
           onOpen={(id) => void onOpen(id)}
+          matchLabel={labels.match}
+          matchIdLabel={labels.matchId}
+          seatsLabel={labels.seats}
         />
       </section>
 

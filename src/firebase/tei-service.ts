@@ -1,4 +1,5 @@
 import { callFunction } from './functions-client';
+import type { OpsProduct } from '../app/product-context';
 
 export type TeiPool = 'human' | 'squad' | 'localAi' | 'group';
 export type TeiTrack = 'goOut' | 'points';
@@ -54,25 +55,52 @@ export async function opsVoidRatedMatch(
 }
 
 export async function opsUnrateOnlineSector(
+  product: OpsProduct,
   gameId: string,
   reason: string
 ): Promise<{
   ok: true;
-  gameId: string;
+  gameId?: string;
+  eventId?: string;
   matchCode?: string;
   alreadyUnrated?: boolean;
   strippedCount?: number;
   ledgerEventsMarked?: number;
   note?: string;
 }> {
+  if (product === 'lattice') {
+    return callFunction('opsUnrateLatticeOnlineRoom', { gameId, reason });
+  }
   return callFunction('opsUnrateOnlineSector', { gameId, reason });
 }
 
 export async function listCaptainRatingEvents(
+  product: OpsProduct,
   uid: string,
   limit = 40
-): Promise<{ ok: true; uid: string; events: Record<string, unknown>[] }> {
+): Promise<{ ok: true; uid?: string; events: Record<string, unknown>[] }> {
+  if (product === 'lattice') {
+    return callFunction('listLatticeCaptainRatingEvents', { uid, limit });
+  }
   return callFunction('listCaptainRatingEvents', { uid, limit });
+}
+
+export async function getLatticeTei(uid: string): Promise<{
+  ok: true;
+  uid: string;
+  tei: Record<string, unknown> | null;
+}> {
+  return callFunction('getLatticeTei', { uid });
+}
+
+export async function opsSetLatticeTei(input: {
+  uid: string;
+  track: 'localAi' | 'online';
+  mu: number;
+  sigma: number;
+  reason?: string;
+}): Promise<{ ok: true }> {
+  return callFunction('opsSetLatticeTei', input);
 }
 
 export async function listMatchRatingEvents(

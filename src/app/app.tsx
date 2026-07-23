@@ -1,9 +1,10 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 
 import { AuditPanel } from './audit-panel';
 import { BansPanel } from './bans-panel';
 import { CaptainsPanel } from './captains-panel';
 import { CrewsPanel } from './crews-panel';
+import { OpsProductProvider, useOpsProduct } from './product-context';
 import { ReportsPanel } from './reports-panel';
 import { SectorsPanel } from './sectors-panel';
 import { SubspacePanel } from './subspace-panel';
@@ -20,15 +21,22 @@ type OpsTab =
   | 'bans'
   | 'tts-cache';
 
-export function App() {
+function OpsShell() {
   const auth = useOpsAuth();
+  const { product, setProduct, labels, isWarpOnlyTab } = useOpsProduct();
   const [tab, setTab] = useState<OpsTab>('sectors');
+
+  useEffect(() => {
+    if (isWarpOnlyTab(tab)) {
+      setTab('sectors');
+    }
+  }, [product, tab, isWarpOnlyTab]);
 
   if (!auth.ready) {
     return (
       <div className="shell">
         <main className="main">
-          <p role="status">Loading Warp Ops…</p>
+          <p role="status">Loading IWGF Ops…</p>
         </main>
       </div>
     );
@@ -62,11 +70,33 @@ export function App() {
         <div className="brand">
           <img src="/W-1-1.png" alt="" width={36} height={36} />
           <div>
-            <h1>Warp Ops</h1>
-            <p>Fleet administration · warp-12</p>
+            <h1>IWGF Ops</h1>
+            <p>Federation administration · warp-12</p>
           </div>
         </div>
         <div className="session">
+          <div
+            className="product-toggle"
+            role="group"
+            aria-label="Product"
+          >
+            <button
+              type="button"
+              className={product === 'warp' ? 'btn primary' : 'btn'}
+              aria-pressed={product === 'warp'}
+              onClick={() => setProduct('warp')}
+            >
+              Warp
+            </button>
+            <button
+              type="button"
+              className={product === 'lattice' ? 'btn primary' : 'btn'}
+              aria-pressed={product === 'lattice'}
+              onClick={() => setProduct('lattice')}
+            >
+              Lattice
+            </button>
+          </div>
           {auth.user && !auth.user.isAnonymous ? (
             <>
               <code>{auth.user.email ?? auth.user.uid}</code>
@@ -96,7 +126,7 @@ export function App() {
           <div className="gate panel">
             <h2>Sign in required</h2>
             <p>
-              Warp Ops is restricted to captains with the Firebase{' '}
+              IWGF Ops is restricted to captains with the Firebase{' '}
               <strong>admin</strong> or <strong>moderator</strong> claim.
             </p>
             {auth.error ? (
@@ -143,6 +173,12 @@ export function App() {
           </div>
         ) : (
           <>
+            <p className="product-context" role="status">
+              Moderating <strong>{labels.productName}</strong>
+              {product === 'lattice'
+                ? ' — Crews, Reports, and TTS stay on Warp.'
+                : null}
+            </p>
             <nav className="nav" aria-label="Ops sections">
               <button
                 type="button"
@@ -150,7 +186,7 @@ export function App() {
                 aria-current={tab === 'sectors' ? 'page' : undefined}
                 onClick={() => setTab('sectors')}
               >
-                Sectors
+                {labels.matches}
               </button>
               <button
                 type="button"
@@ -166,24 +202,28 @@ export function App() {
                 aria-current={tab === 'subspace' ? 'page' : undefined}
                 onClick={() => setTab('subspace')}
               >
-                Subspace
+                {labels.chat}
               </button>
-              <button
-                type="button"
-                className="btn"
-                aria-current={tab === 'reports' ? 'page' : undefined}
-                onClick={() => setTab('reports')}
-              >
-                Reports
-              </button>
-              <button
-                type="button"
-                className="btn"
-                aria-current={tab === 'crews' ? 'page' : undefined}
-                onClick={() => setTab('crews')}
-              >
-                Crews
-              </button>
+              {product === 'warp' ? (
+                <button
+                  type="button"
+                  className="btn"
+                  aria-current={tab === 'reports' ? 'page' : undefined}
+                  onClick={() => setTab('reports')}
+                >
+                  Reports
+                </button>
+              ) : null}
+              {product === 'warp' ? (
+                <button
+                  type="button"
+                  className="btn"
+                  aria-current={tab === 'crews' ? 'page' : undefined}
+                  onClick={() => setTab('crews')}
+                >
+                  Crews
+                </button>
+              ) : null}
               <button
                 type="button"
                 className="btn"
@@ -202,7 +242,7 @@ export function App() {
                   Bans
                 </button>
               ) : null}
-              {auth.isAdmin ? (
+              {auth.isAdmin && product === 'warp' ? (
                 <button
                   type="button"
                   className="btn"
@@ -219,16 +259,16 @@ export function App() {
               <CaptainsPanel />
             ) : tab === 'subspace' ? (
               <SubspacePanel />
-            ) : tab === 'reports' ? (
+            ) : tab === 'reports' && product === 'warp' ? (
               <ReportsPanel />
-            ) : tab === 'crews' ? (
+            ) : tab === 'crews' && product === 'warp' ? (
               <CrewsPanel />
             ) : tab === 'audit' ? (
               <AuditPanel />
-            ) : tab === 'tts-cache' && auth.isAdmin ? (
-              <TtsCachePanel />
-            ) : auth.isAdmin ? (
+            ) : tab === 'bans' && auth.isAdmin ? (
               <BansPanel />
+            ) : tab === 'tts-cache' && auth.isAdmin && product === 'warp' ? (
+              <TtsCachePanel />
             ) : (
               <SectorsPanel />
             )}
@@ -236,5 +276,13 @@ export function App() {
         )}
       </main>
     </div>
+  );
+}
+
+export function App() {
+  return (
+    <OpsProductProvider>
+      <OpsShell />
+    </OpsProductProvider>
   );
 }

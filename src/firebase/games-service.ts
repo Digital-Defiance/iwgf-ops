@@ -1,10 +1,12 @@
 import { callFunction } from './functions-client';
+import type { OpsProduct } from '../app/product-context';
 
 export type OpsGameCaptain = {
   id: string;
   displayName: string;
   isAi: boolean;
   verified?: boolean;
+  color?: 'WHITE' | 'BLACK';
 };
 
 export type OpsGameSummary = {
@@ -25,31 +27,51 @@ export type OpsGameSummary = {
   opsTerminated?: boolean;
   allowSpectate?: boolean;
   spectatorCount?: number;
+  roomCode?: string;
+  name?: string;
+  assisted?: boolean;
+  winner?: string | null;
 };
 
-export async function listActiveGames(limit = 100): Promise<{
-  games: OpsGameSummary[];
-  scanned?: number;
-}> {
+export async function listActiveGames(
+  product: OpsProduct,
+  limit = 100
+): Promise<{ games: OpsGameSummary[]; scanned?: number }> {
+  if (product === 'lattice') {
+    return callFunction('listActiveLatticeRooms', { limit });
+  }
   return callFunction('listActiveGames', { limit });
 }
 
-export async function searchGames(input: {
-  gameId?: string;
-  hostId?: string;
-  phase?: string;
-  rated?: boolean | null;
-  fromIso?: string;
-  toIso?: string;
-  limit?: number;
-}): Promise<{ games: OpsGameSummary[]; scanned?: number }> {
+export async function searchGames(
+  product: OpsProduct,
+  input: {
+    gameId?: string;
+    roomCode?: string;
+    hostId?: string;
+    phase?: string;
+    rated?: boolean | null;
+    fromIso?: string;
+    toIso?: string;
+    limit?: number;
+  }
+): Promise<{ games: OpsGameSummary[]; scanned?: number }> {
+  if (product === 'lattice') {
+    return callFunction('searchLatticeRooms', input);
+  }
   return callFunction('searchGames', input);
 }
 
-export async function getOpsGame(gameId: string): Promise<{
+export async function getOpsGame(
+  product: OpsProduct,
+  gameId: string
+): Promise<{
   game: OpsGameSummary;
   detail: Record<string, unknown>;
 }> {
+  if (product === 'lattice') {
+    return callFunction('getOpsLatticeRoom', { gameId });
+  }
   return callFunction('getOpsGame', { gameId });
 }
 

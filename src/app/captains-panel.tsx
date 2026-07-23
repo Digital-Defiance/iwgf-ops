@@ -16,6 +16,7 @@ import {
 } from '../firebase/captains-service';
 import { muteUser, unmuteUser } from '../firebase/moderation-service';
 import { useOpsAuth } from '../firebase/ops-auth';
+import { useOpsProduct } from './product-context';
 import {
   getOpsRatedMatch,
   listCaptainRatingEvents,
@@ -143,6 +144,7 @@ function readRatingRows(stats: CaptainDossier['stats']): RatingRow[] {
 }
 
 export function CaptainsPanel() {
+  const { product } = useOpsProduct();
   const { isAdmin, user } = useOpsAuth();
   const [query, setQuery] = useState('');
   const [hits, setHits] = useState<CaptainSearchHit[]>([]);
@@ -221,7 +223,7 @@ export function CaptainsPanel() {
       setEditingId(null);
       setRatedMatch(null);
       try {
-        const ledger = await listCaptainRatingEvents(uid, 40);
+        const ledger = await listCaptainRatingEvents(product, uid, 40);
         setCaptainEvents(ledger.events);
       } catch {
         setCaptainEvents([]);

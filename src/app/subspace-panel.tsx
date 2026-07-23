@@ -8,6 +8,7 @@ import {
   type OpsMessageHit,
 } from '../firebase/messages-service';
 import { muteInSector, muteUser } from '../firebase/moderation-service';
+import { useOpsProduct } from './product-context';
 
 function fmtWhen(iso: string): string {
   if (!iso) {
@@ -156,6 +157,7 @@ function MessageTable({
 }
 
 export function SubspacePanel() {
+  const { product, labels } = useOpsProduct();
   const [text, setText] = useState('');
   const [fromUid, setFromUid] = useState('');
   const [fromName, setFromName] = useState('');
@@ -181,7 +183,7 @@ export function SubspacePanel() {
     setThread(null);
     setThreadGameId(null);
     try {
-      const res = await searchMessages({
+      const res = await searchMessages(product, {
         text: text.trim() || undefined,
         fromUid: fromUid.trim() || undefined,
         fromName: fromName.trim() || undefined,
@@ -206,7 +208,7 @@ export function SubspacePanel() {
     setBusy(true);
     setError(null);
     try {
-      const res = await listSectorMessages(id, 300);
+      const res = await listSectorMessages(product, id, 300);
       setThread(res.messages);
       setThreadGameId(res.gameId);
       setStatus(`Loaded ${res.messages.length} message(s) in sector ${id}.`);
@@ -229,6 +231,7 @@ export function SubspacePanel() {
     setError(null);
     try {
       await deleteSectorMessage(
+        product,
         hit.gameId,
         hit.messageId,
         reason.trim() || undefined
@@ -250,6 +253,10 @@ export function SubspacePanel() {
   };
 
   const onRedact = async (hit: OpsMessageHit) => {
+    if (product === 'lattice') {
+      setError('Redact is Warp Subspace only — use Delete for Lattice chat.');
+      return;
+    }
     const reason = window.prompt(
       `Redact message in ${hit.gameId}? Keeps the doc; blanks the body. Reason:`,
       ''

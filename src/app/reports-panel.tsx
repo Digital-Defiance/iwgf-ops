@@ -232,6 +232,7 @@ export function ReportsPanel() {
     setError(null);
     try {
       await deleteSectorMessage(
+        'warp',
         selected.gameId,
         selected.messageId,
         reason.trim() || undefined

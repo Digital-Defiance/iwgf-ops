@@ -1,4 +1,5 @@
 import { callFunction } from './functions-client';
+import type { OpsProduct } from '../app/product-context';
 
 export async function muteUser(params: {
   uid: string;
@@ -30,26 +31,41 @@ export async function unmuteInSector(
   return callFunction('unmuteInSector', { gameId, uid });
 }
 
-export async function opsKickCaptain(params: {
-  gameId: string;
-  targetUid: string;
-  reason?: string;
-}): Promise<{ mode: string; remaining: number }> {
+export async function opsKickCaptain(
+  product: OpsProduct,
+  params: {
+    gameId: string;
+    targetUid: string;
+    reason?: string;
+  }
+): Promise<{ mode: string; remaining: number }> {
+  if (product === 'lattice') {
+    return callFunction('opsKickLatticePlayer', params);
+  }
   return callFunction('opsKickCaptain', params);
 }
 
-export async function opsTerminateSector(params: {
-  gameId: string;
-  reason?: string;
-  mode?: 'soft' | 'hard';
-}): Promise<{ mode: string; deleted?: unknown }> {
+export async function opsTerminateSector(
+  product: OpsProduct,
+  params: {
+    gameId: string;
+    reason?: string;
+    mode?: 'soft' | 'hard';
+  }
+): Promise<{ mode: string; deleted?: unknown }> {
+  if (product === 'lattice') {
+    return callFunction('opsTerminateLatticeRoom', params);
+  }
   return callFunction('opsTerminateSector', params);
 }
 
-export async function listStaleGames(params?: {
-  olderThanDays?: number;
-  limit?: number;
-}): Promise<{
+export async function listStaleGames(
+  product: OpsProduct,
+  params?: {
+    olderThanDays?: number;
+    limit?: number;
+  }
+): Promise<{
   cutoff: string;
   games: Array<{
     id: string;
@@ -60,24 +76,39 @@ export async function listStaleGames(params?: {
     captainCount: number;
   }>;
 }> {
+  if (product === 'lattice') {
+    return callFunction('listStaleLatticeRooms', params ?? {});
+  }
   return callFunction('listStaleGames', params ?? {});
 }
 
 export async function opsCleanupStaleSector(
+  product: OpsProduct,
   gameId: string
 ): Promise<{ deleted: Record<string, number> }> {
+  if (product === 'lattice') {
+    return callFunction('opsCleanupStaleLatticeRoom', { gameId });
+  }
   return callFunction('opsCleanupStaleSector', { gameId });
 }
 
 export async function opsDropSpectators(
+  product: OpsProduct,
   gameId: string
 ): Promise<{ dropped: number }> {
+  if (product === 'lattice') {
+    return callFunction('opsDropLatticeObservers', { gameId });
+  }
   return callFunction('opsDropSpectators', { gameId });
 }
 
 export async function setAllowSpectate(
+  product: OpsProduct,
   gameId: string,
   allow: boolean
-): Promise<{ allowSpectate: boolean }> {
+): Promise<{ allowSpectate?: boolean; allow?: boolean }> {
+  if (product === 'lattice') {
+    return callFunction('opsSetLatticeAllowObservers', { gameId, allow });
+  }
   return callFunction('setAllowSpectate', { gameId, allow });
 }

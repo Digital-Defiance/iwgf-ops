@@ -50,6 +50,25 @@
   justify-content: flex-end;
 }
 
+.product-toggle {
+  display: inline-flex;
+  gap: 0.25rem;
+  padding: 0.15rem;
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  background: rgba(0, 0, 0, 0.25);
+}
+
+.product-toggle .btn {
+  min-width: 4.5rem;
+}
+
+.product-context {
+  margin: 0 0 0.75rem;
+  color: var(--muted);
+  font-size: 0.9rem;
+}
+
 .session code {
   font-family: var(--mono);
   font-size: 0.75rem;

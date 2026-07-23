@@ -1,8 +1,20 @@
 # IWGF Ops
 
-Federation administration console for Warp + Subspace Lattice (Firebase project `warp-12`).
+Federation administration console for **Warp Dominoes** and **Subspace Lattice** (Firebase project `warp-12`).
 
 Lives at the IWGF workspace root as `ops/` → https://ops.iwgf.org
+
+## Product toggle
+
+Header **Warp | Lattice** scopes every shared panel:
+
+| Tab | Warp | Lattice |
+|-----|------|---------|
+| Sectors / Rooms | `games` | `latticeRooms` |
+| Captains | shared identity + Warp TEI | shared identity + `latticeTei` ledger |
+| Subspace / Chat | sector messages | room chat |
+| Bans / Audit | federation-wide | federation-wide (`detail.product: lattice` on Lattice actions) |
+| Reports / Crews / TTS | Warp only | hidden |
 
 ## Surfaces
 
@@ -14,10 +26,8 @@ Lives at the IWGF workspace root as `ops/` → https://ops.iwgf.org
 
 Copy `VITE_FIREBASE_*` (and desktop Google OAuth keys if using Tauri) into `.env` — see `.env.example`.
 
-## Access
+## Backend
 
-Google sign-in required. Auth custom claims `admin` / `moderator`. Warp callables still live in `Warp12/functions`; Lattice panels will call `lattice` functions.
-
-## Deploy
-
-Staging copies `dist/` into `Warp12/federation-hosting/ops` (Firebase `public` must stay under the Warp12 firebase.json tree), then deploys hosting target `ops`.
+- Warp + Lattice **ops** callables live in `Warp12/functions` (same `/api/fn` proxy).
+- Lattice **player** callables stay in `subspace-lattice/apps/functions`.
+- Deploy staging: `dist/` → `Warp12/federation-hosting/ops`.
